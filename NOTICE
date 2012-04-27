@@ -1,0 +1,18 @@
+
+mongoDB driver:
+mongoDB connection is provided by the mongoDB C++ driver,
+which is open source software, copyright by 10gen, Inc.
+The original software is available from
+  http://dl.mongodb.org/dl/cxx-driver
+
+
+v8:
+javascript engine is provided by the Javascript V8 Engine,
+which is open source software, copyright by Google Inc.
+The original software is available from
+  http://code.google.com/p/v8/
+
+
+libapreq2:
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).

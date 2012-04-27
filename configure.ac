@@ -4,7 +4,7 @@
 AC_INIT(mod_mongo, 0.0.1,[])
 
 AC_CONFIG_SRCDIR([mod_mongo.cpp])
-AC_CONFIG_HEADERS([config.h:config.h.in])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE(mod_mongo, 0.0.1, [NO-DEFINE])
@@ -14,6 +14,80 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 
+# Option for mongo debug log level
+AC_ARG_WITH(mongo-debug-log,
+  AC_HELP_STRING([--with-mongo-debug-log=LEVEL],
+    [mongo debug log level [default=no]]),
+  [MONGO_DEBUG_LOG="${withval}"],
+  [MONGO_DEBUG_LOG=no]
+)
+AS_IF([test "x${MONGO_DEBUG_LOG}" != xno],
+    [AC_DEFINE_UNQUOTED([AP_MONGO_DEBUG_LOG_LEVEL],
+      [${MONGO_DEBUG_LOG}], [mongo debug log level])]
+)
+
+# Option for v8 isolate
+AC_ARG_ENABLE(v8-isolate,
+  AC_HELP_STRING([--enable-v8-isolate],
+    [enable v8 isolate [default=no]]),
+  [ENABLED_V8_ISOLATE="${enableval:-yes}"],
+  [ENABLED_V8_ISOLATE=no]
+)
+AS_IF([test "x${ENABLED_V8_ISOLATE}" = xyes],
+    [AC_DEFINE([AP_USE_V8_ISOLATE], [1], [enable v8 isolate])]
+)
+
+# Checks for v8
+AC_ARG_WITH(
+  v8,
+  [AC_HELP_STRING([--with-v8=PATH],
+    [v8 include path [default=/usr/include]])],
+  [V8_PATH="$withval"],
+  [V8_PATH="/usr/include"]
+)
+
+AC_CHECK_FILE(
+  "${V8_PATH}/v8.h",
+  [V8_INCLUDEDIR=${V8_PATH}],
+  [AC_MSG_ERROR([Missing required v8 header.])]
+)
+
+AC_ARG_WITH(
+  v8-lib,
+  [AC_HELP_STRING([--with-v8-lib=PATH],
+    [v8 library path [default=no]])],
+  [V8_LIBPATH="$withval"],
+  [V8_LIBPATH="no"]
+)
+
+AS_IF([test "x${V8_LIBPATH}" != xno],
+  V8_LDFLAGS="-L${V8_LIBPATH}"
+)
+
+AC_MSG_CHECKING([for v8 library])
+AC_LANG(C++)
+SAVED_LDFLAGS=$LDFLAGS
+LDFLAGS="${LDFLAGS} ${V8_LDFLAGS} -lv8"
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM(
+    [#include "v8.h"],
+    [v8::HandleScope dummy])],
+  [V8_LIBS="-lv8"],
+  [AC_MSG_ERROR([Missing required v8 library.])]
+)
+AC_MSG_RESULT(yes)
+LDFLAGS=$SAVED_LDFLAGS
+
+# v8 libraries.
+V8_INCLUDES="-I${V8_INCLUDEDIR}"
+V8_LDFLAGS="${V8_LDFLAGS} ${V8_LIBS}"
+AC_SUBST(V8_INCLUDES)
+AC_SUBST(V8_LDFLAGS)
+AC_SUBST(V8_LIBS)
+
+
+# Checks for boost.
+# TODO
 
 # Checks for mongoclient.
 AC_ARG_WITH(
@@ -30,10 +104,22 @@ AC_CHECK_FILE(
   [AC_MSG_ERROR([Missing required mongoDB client header.])]
 )
 
+AC_ARG_WITH(
+  mongo-lib,
+  [AC_HELP_STRING([--with-mongo-lib=PATH],
+    [mongo client library path [default=no]])],
+  [MONGO_LIBPATH="$withval"],
+  [MONGO_LIBPATH="no"]
+)
+
+AS_IF([test "x${MONGO_LIBPATH}" != xno],
+  MONGO_LDFLAGS="-L${MONGO_LIBPATH}"
+)
+
 AC_MSG_CHECKING([for mongoDB client library])
 AC_LANG(C++)
 SAVED_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS -lmongoclient -lboost_system-mt"
+LDFLAGS="$LDFLAGS ${MONGO_LDFLAGS} -lmongoclient -lboost_system-mt"
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM(
     [#include "mongo/client/dbclient.h"],
@@ -43,6 +129,13 @@ AC_LINK_IFELSE(
 )
 AC_MSG_RESULT(yes)
 LDFLAGS=$SAVED_LDFLAGS
+
+# mongoDB client libraries.
+MONGO_INCLUDES="-I${MONGO_INCLUDEDIR}"
+MONGO_LDFLAGS="${MONGO_LDFLAGS} ${MONGO_LIBS}"
+AC_SUBST(MONGO_INCLUDES)
+AC_SUBST(MONGO_LDFLAGS)
+AC_SUBST(MONGO_LIBS)
 
 
 # Checks for apxs.
@@ -159,11 +252,6 @@ AC_SUBST(APACHE_CFLAGS)
 AC_SUBST(APACHE_CPPFLAGS)
 AC_SUBST(APACHE_LDFLAGS)
 AC_SUBST(APACHE_LIBS)
-
-# mongoDB client libraries.
-MONGO_INCLUDES="-I${MONGO_INCLUDEDIR}"
-AC_SUBST(MONGO_INCLUDES)
-AC_SUBST(MONGO_LIBS)
 
 
 AC_CONFIG_FILES([Makefile])

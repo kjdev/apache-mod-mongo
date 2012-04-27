@@ -1,0 +1,381 @@
+
+function mongo_rputs(msg, result) {
+    mongo.ap.rputs(msg + " >>> [" + typeof(result) + "] " + result + "\n");
+    if (typeof(result) !== "undefined") {
+        mongo.ap.rputs(msg + " >>> [" + typeof(result) + "] "
+                       + mongo.toJson(result) + "\n");
+    }
+}
+
+function mongo_find(msg, ns, query) {
+    var result = mongo.find(ns, query);
+    mongo.ap.rputs(msg + " >>> [" + typeof(result) + "]" + "\n");
+    for (var i = 0; i < result.length; i++) {
+        mongo_rputs(msg, result[i]);
+    }
+}
+
+//mongo
+var ns = "test.test";
+var ret, i;
+
+mongo.ap.rputs("----- Insert -----\n");
+//object mongo.insert( string ns,
+//                     object obj
+//                     [,
+//                       boolean new = false,
+//                       boolean safe = false
+//                     ] )
+
+var doc = {
+    author: 'joe',
+    created : new Date('03/28/2009'),
+    title : 'Yet another blog post',
+    text : 'Here is the text...',
+    tags : [ 'example', 'joe' ],
+    comments : [ { author: 'jim', comment: 'I disagree' },
+                 { author: 'nancy', comment: 'Good post' } ]
+};
+
+var ret = mongo.insert(ns, doc);
+mongo_rputs('insert', ret);
+
+//insert: get ObjectId (_id)
+doc = { author: "bob", title : "Yet bob post" };
+
+ret = mongo.insert(ns, doc, true);
+mongo_rputs('insert:get ObjectId', ret);
+
+var oid = ret._id.$oid;
+mongo.ap.rputs("[ObjectId] " + oid + "\n");
+
+//insert: error => return undefined
+ret = mongo.insert(ns, 'error');
+mongo_rputs('insert:error', ret);
+
+//insert: data
+mongo.insert(ns, { author: 'jim', title : 'Yet jim post' });
+mongo.insert(ns, { author: 'nancy', title : 'Yet nancy post' });
+
+
+mongo.ap.rputs("----- Find -----\n");
+//array mongo.find( string ns
+//                  [,
+//                    object query = {},
+//                    int limit = 0,
+//                    int skip = 0,
+//                    object fields = {},
+//                    object orderby = null
+//                  ] )
+
+var query = {};
+
+ret = mongo.find(ns, query);
+mongo_rputs('find', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find', ret[i]);
+}
+
+//find: query
+query = { author: 'jim' };
+
+ret = mongo.find(ns, query);
+mongo_rputs('find:query', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:query', ret[i]);
+}
+
+//find: lmit and skip
+var limit = 1;
+var skip = 0;
+query = {};
+
+ret = mongo.find(ns, query, limit, skip);
+mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret[i]);
+}
+
+limit = 2;
+
+ret = mongo.find(ns, query, limit, skip);
+mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret[i]);
+}
+
+skip = 2;
+
+ret = mongo.find(ns, query, limit, skip);
+mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:limit(' + limit + '):skip(' + skip + ')', ret[i]);
+}
+
+//find: fields
+var fields = { title : 1 };
+limit = 1;
+skip = 0;
+
+ret = mongo.find(ns, query, limit, skip, fields);
+mongo_rputs('find:fields(title)', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:fields(title)', ret[i]);
+}
+
+//find: orderby
+fields = {};
+var orderby = { author : 1 };
+
+ret = mongo.find(ns, query, limit, skip, fields, orderby);
+mongo_rputs('find:orderby(author:1)', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:orderby(author:1)', ret[i]);
+}
+
+ret = mongo.find(ns, query, limit, skip, fields, { author : -1 });
+mongo_rputs('find:orderby(author:-1)', ret);
+for (i = 0; i < ret.length; i++) {
+    mongo_rputs('find:orderby(author:-1)', ret[i]);
+}
+
+//find: error => return undefined
+ret = mongo.find(ns, 'error');
+mongo_rputs('find:error', ret);
+
+//find: empty => return length = 0
+ret = mongo.find(ns, { author: "test" });
+mongo_rputs('find:empty', ret);
+mongo.ap.rputs("Length: " + ret.length + "\n");
+
+
+mongo.ap.rputs("----- FindOne -----\n");
+//object mongo.findOne( string ns
+//                      [,
+//                        object query = {},
+//                        object fields = {}
+//                      ] )
+
+query = {};
+
+ret = mongo.findOne(ns, query);
+mongo_rputs('findOne', ret);
+
+//findOne: query
+query = { author : 'jim' };
+
+ret = mongo.findOne(ns, query);
+mongo_rputs('findOne:query', ret);
+
+//findOne: fields
+fields = { title : 1 };
+
+query = { author : 'joe' };
+
+ret = mongo.findOne(ns, query, fields);
+mongo_rputs('findOne:fields(title)', ret);
+
+//findOne: error => return undefined
+ret = mongo.findOne(ns, 'error');
+mongo_rputs('findOne:error', ret);
+
+//findOne: empty => return []
+ret = mongo.find(ns, { author: "test" });
+mongo_rputs('findOne:empty', ret);
+
+
+mongo.ap.rputs("----- Update -----\n");
+//boolean mongo.update( string ns,
+//                      object query,
+//                      object obj
+//                      [,
+//                        boolean upsert = false,
+//                        boolean multi = false,
+//                        boolean safe = false
+//                      ] )
+
+query = { author: 'jim' };
+var obj = { author: 'jim', title: 'jim post', text: 'jim blog post' };
+
+ret = mongo.update(ns, query, obj);
+mongo_rputs('update', ret);
+mongo_find('update', ns, query);
+
+//update: upsert
+var upsert = false;
+
+query = { name: 'john' };
+obj = { name: 'john', age: 10 };
+
+ret = mongo.update(ns, query, obj, upsert);
+mongo_rputs('update:upsert(false)', ret);
+mongo_find('update:upsert(false)', ns, query);
+
+upsert = true;
+
+ret = mongo.update(ns, query, obj, upsert);
+mongo_rputs('update:upsert(true)', ret);
+mongo_find('update:upsert(true)', ns, query);
+
+query = { name: 'john', age: 20 };
+obj = query;
+mongo.update(ns, query, obj, true);
+
+query = { name: 'john', age: 30 };
+obj = query;
+mongo.update(ns, query, obj, true);
+
+query = { name: 'john', age: 40 };
+obj = query;
+mongo.update(ns, query, obj, true);
+
+mongo_find('update:multi(insert)', ns, { name: 'john' });
+
+//update: multi
+var multi = false;
+
+query = { name: 'john' };
+obj = { $set: { age: 50 } };
+upsert = false;
+
+mongo.update(ns, query, obj, upsert, multi);
+mongo_find('update:mult(false)', ns, query);
+
+multi = true;
+
+mongo.update(ns, query, obj, upsert, multi);
+mongo_find('update:multi(ture)', ns, query);
+
+//update: [$inc]
+query = { name: 'joe' };
+obj = { $inc: { n : 1 } };
+
+ret = mongo.update(ns, query, obj, true);
+mongo_find('update:$inc', ns, query);
+
+ret = mongo.update(ns, query, obj, true);
+mongo_find('update:$inc', ns, query);
+
+ret = mongo.update(ns, query, obj, true);
+mongo_find('update:$inc', ns, query);
+
+//update: error => return undefined
+ret = mongo.update(ns, 'error');
+mongo_rputs('update:error', ret);
+
+
+mongo.ap.rputs("----- Remove -----\n");
+//boolean mongo.remove( string ns,
+//                      object query
+//                      [,
+//                        boolean justOne = false,
+//                        boolean safe = false
+//                      ] )
+
+query = { name: 'joe' };
+
+ret = mongo.remove(ns, query);
+mongo_rputs('remove', ret);
+mongo_find('remove', ns, query);
+
+//remove: data
+mongo.insert(ns, { name: 'john', age: 10 });
+mongo.insert(ns, { name: 'john', age: 20 });
+mongo.insert(ns, { name: 'john', age: 30 });
+
+//remove: junstOne
+var justOne = true;
+
+query = { name: 'john' };
+
+ret = mongo.remove(ns, query, justOne);
+mongo_rputs('remove:justOne(true)', ret);
+mongo_find('remove:justOne(true)', ns, query);
+
+justOne = false;
+
+ret = mongo.remove(ns, query, justOne);
+mongo_rputs('remove:justOne(false)', ret);
+mongo_find('remove:justOne(false)', ns, query);
+
+//remove: error => return undefined
+ret = mongo.remove(ns, 'error');
+mongo_rputs('remove:error', ret);
+
+
+mongo.ap.rputs("----- findAndModify -----\n");
+//boolean|object mongo.findAndModify( string ns
+//                                    [,
+//                                      object query = {},
+//                                      object sort = {},
+//                                      boolean remove = false,
+//                                      object update = null ,
+//                                      boolean new = false,
+//                                      object fields = {},
+//                                      boolean upsert = false,
+//                                      boolean safe = false
+//                                    ] )
+
+mongo.remove(ns, {});
+mongo.insert(ns, {name: 'Next promo',
+                  inprogress: false,
+                  priority:0,
+                  tasks: [ 'select product', 'add inventory', 'do placement']});
+mongo.insert(ns, {name: 'Biz report',
+                  inprogress: false,
+                  priority:1,
+                  tasks : [ 'run sales report', 'email report' ]});
+mongo.insert(ns, {name: 'Biz report',
+                  inprogress: false,
+                  priority:2,
+                  tasks : [ 'run marketing report', 'email report' ]});
+
+var update = { $set: {inprogress: true, started: new Date()} };
+
+ret = mongo.findAndModify(ns,
+                          {inprogress: false, name: 'Biz report'},
+                          {priority:-1}, false, update, true);
+mongo_rputs('findAndModify(1)', ret);
+
+ret = mongo.findAndModify(ns,
+                          {inprogress: false, name: 'Next promo'},
+                          null, null,
+                          {$pop: {tasks: -1}}, false,
+                          {tasks: 1});
+mongo_rputs('findAndModify(2)', ret);
+
+mongo_find('findAndModify(2)', ns, { name : 'Next promo'});
+
+ret = mongo.findAndModify(ns, null, { priority: -1 }, true);
+mongo_rputs('findAndModify(3)', ret);
+
+
+mongo.ap.rputs("----- unicode_escape -----\n");
+//mongo.unicode_escape
+
+ret = mongo.insert(ns, { test: 'にほんご'}, true);
+
+var id = ret._id.$oid;
+mongo.ap.rputs(id + "\n");
+
+var query = { _id : { $oid : id } };
+ret = mongo.toJson(mongo.findOne(ns, query));
+mongo.ap.rputs(ret + "\n");
+mongo.ap.rputs(mongo.unicode_escape(ret) + "\n");
+
+
+//mongo: clear
+mongo.remove(ns, {});
+
+/*
+//Reponse header: Location
+mongo.ap.rheader("Location", "hoge.html");
+mongo.ap.rcode(302);
+
+//Cookie: read
+var cookie = mongo.ap.header("Cookie");
+mongo.ap.rputs(cookie + "\n");
+
+//Cookie: write
+mongo.ap.rheader("Set-Cookie", "hoge=1");
+*/

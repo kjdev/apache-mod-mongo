@@ -251,11 +251,18 @@ static v8::Handle<v8::Value> v8_ap_request(const v8::Arguments& args)
     if (strcmp(*value, "method") == 0) {
         val = r->method;
     } else if (strcmp(*value, "uri") == 0) {
+        request_rec *prev = r->prev;
+        while (prev != NULL) {
+            r = prev;
+            prev = r->prev;
+        }
         val = r->uri;
     } else if (strcmp(*value, "filename") == 0) {
         val = r->filename;
     } else if (strcmp(*value, "remote_ip") == 0) {
         val = r->connection->remote_ip;
+    } else if (strcmp(*value, "hostname") == 0) {
+        val = r->hostname;
     } else {
         val = NULL;
     }

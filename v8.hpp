@@ -335,10 +335,6 @@ static v8::Handle<v8::Value> v8_ap_response_code(const v8::Arguments& args)
 
 static v8::Handle<v8::Value> v8_ap_params(const v8::Arguments& args)
 {
-    if (args.Length() < 1) {
-        return v8::Undefined();
-    }
-
     V8_MONGO_AP_WRAP(1);
 
     v8::String::Utf8Value value(args[0]->ToString());

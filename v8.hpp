@@ -969,14 +969,9 @@ static v8::Handle<v8::Value> v8_mongo_findAndModify(const v8::Arguments& args)
     V8_MONGO_UTF8VALUE(ns, _ns, "findAndModify namespace");
 
     //db / collection
-    char *s = strchr(*ns, '.');
-    if (s == NULL) {
-        _RERR(r, "findAndModify namespace is invalid: %s", r->filename);
-        return scope.Close(v8::Undefined());
-    }
-    char *collection = apr_psprintf(r->pool, "%s", s + 1);
-    *s = '\0';
-    char *db = apr_psprintf(r->pool, "%s", *ns);
+    char *s;
+    char *collection = apr_strtok(*ns, ".", &s);
+    char *db = apr_strtok(NULL, ".", &s);
 
     V8_MONGO_TRY();
 

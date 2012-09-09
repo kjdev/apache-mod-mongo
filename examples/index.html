@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Examples</title>
+</head>
+<body>
+<form id="Form" method="post" action="/examples/dump.mongo">
+  Text:
+  <input type="text" name="name_text" />
+  <br />
+  Checkbox:
+  <input type="checkbox" name="name_check">
+  <br />
+  Radio:
+  <input type="radio" name="name_radio" value="1">1
+  <input type="radio" name="name_radio" value="2">2
+  <br />
+  Select:
+  <select name="name_select">
+    <option>-- Select one --</option>
+    <option value="option 1">Option 1</option>
+    <option value="option 2">Option 2</option>
+  </select>
+  <br />
+  TextArea:
+  <textarea name="name_area"></textarea>
+  <br />
+  <input type="hidden" name="name_hidden" value="Hidden" />
+  <input type="submit" value="Post" />
+</form>
+</body>
+</html>

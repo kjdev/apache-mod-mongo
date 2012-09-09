@@ -1,0 +1,23 @@
+var ns = 'test.test';
+
+var doc = { params: {} };
+
+/* Get the name of the parameters list */
+/* mongo.ap.params() */
+
+var params = mongo.ap.params();
+mongo.ap.rputs(mongo.toJson(params));
+//["name_text","name_check","name_radio","name_select","name_area","name_hidden"]
+
+/* Get the value of the parameter */
+/* mongo.ap.params('name') */
+
+for (var i = 0; i < params.length; i ++) {
+    mongo.ap.rputs(mongo.ap.params(params[i]));
+    //doc.params[params[i]] = mongo.ap.params(params[i]);
+}
+
+//mongo.ap.rputs(mongo.toJson(doc));
+
+/* Insert */
+//mongo.insert(ns, doc);
